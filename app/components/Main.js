@@ -22,7 +22,8 @@ class Main extends React.Component {
         this.handleRemoveName = this.handleRemoveName.bind(this);
         this.state = {
             names: [],
-            completeNames: []
+            completeNames: [],
+            isLoading: true
         }
     }
 
@@ -35,7 +36,8 @@ class Main extends React.Component {
                 names: [
                     ...prevState.names,
                     code
-                ]
+                ],
+                isLoading:true
             }
         })
         
@@ -81,12 +83,13 @@ class Main extends React.Component {
     });
 
      this.setState({
-            completeNames: completeNames    
+            completeNames: completeNames,
+            isLoading:false    
         })
 
 }
     componentWillMount() {
-        
+        // this is where you will connect to the database.
         this.setState({
             names: ['MSFT', 'AAPL', 'GOOG', 'F']
         })
@@ -164,12 +167,20 @@ class Main extends React.Component {
         // probblem to the way you adding.
         
         if(this.state.names.indexOf(stockCode) >= 0 ) {
+            
 
-            this.setState((prevState) => {
-                prevState.names.splice(prevState.names.indexOf(stockCode , 1));
-                console.log(prevState.names);
+            let newState = []; 
+               
+
+            this.setState((prevState , props) => {
+                 prevState.names.forEach((each) => {
+                    if(each != stockCode) {
+                        newState.push(each);
+                    }
+                });
                 return {
-                    names: prevState.names
+                    names: newState,
+                    isLoading: true
                 }
             })
         } else {
@@ -202,6 +213,15 @@ class Main extends React.Component {
 
         return (
             <div>
+                {this.state.isLoading &&
+                    <div className="loading">
+                        <div className="spinner">
+                            <div className="bounce1"></div>
+                            <div className="bounce2"></div>
+                            <div className="bounce3"></div>
+                        </div>
+                    </div>
+                }
                 <h1>Stock Chart</h1>
                 <div id="container" style={{height: "400px", minWidth: "310px"}}></div>
                 <div>
