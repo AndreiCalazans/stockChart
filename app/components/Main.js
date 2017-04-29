@@ -8,9 +8,8 @@ var seriesOptions = [],
     completeNames = [],
     test = 'test';
 
-// you are having problems with updating state
-// if you updtea completeNames it will trigger the another call , which then will
-// trigger a infinite for loop 
+// now you have to create edit function to remove name from list 
+//when clicked by lifting up the name from the child component.
 
    
 
@@ -20,10 +19,10 @@ class Main extends React.Component {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.createChart = this.createChart.bind(this);
+        this.handleRemoveName = this.handleRemoveName.bind(this);
         this.state = {
             names: [],
-            completeNames: [],
-            updateNames: false
+            completeNames: []
         }
     }
 
@@ -109,7 +108,7 @@ class Main extends React.Component {
     
 
     shouldComponentUpdate(nextProps, nextState) {
-    
+        console.log(this.state.names.length , nextState.names.length);
         if (this.state.names.length != nextState.names.length) {
             return true
         } else if(this.state.completeNames.length === nextState.completeNames.length) {
@@ -160,8 +159,32 @@ class Main extends React.Component {
 });
     }
 
-    handleRemoveName() {
-        console.log('remove this');
+    handleRemoveName(stockCode) {
+        console.log(stockCode);
+        // probblem to the way you adding.
+        
+        if(this.state.names.indexOf(stockCode) >= 0 ) {
+
+            this.setState((prevState) => {
+                prevState.names.splice(prevState.names.indexOf(stockCode , 1));
+                console.log(prevState.names);
+                return {
+                    names: prevState.names
+                }
+            })
+        } else {
+            console.log('not found');
+        }
+
+            // this.setState((prevState) => {
+            //     return {
+            //         names: [
+            //             ...prevState.names,
+            //             stockCode
+            //         ]
+            //     }
+            // })
+    
     }
 
     render() {
