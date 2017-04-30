@@ -16,3 +16,27 @@ html {
     justify-content: center;
     align-items: center;
 }
+
+.material-shadow {
+    padding: 10px;
+    box-shadow: 0 0 3px 0px rgba(0,0,0,0.5);
+    margin: 5px;
+}
+
+.warning {
+    position: fixed;
+    @extend .flex-center-box;
+    z-index: 1000;
+    width: 100%;
+    background: rgba(0,0,0,0.1);
+    height: 100%;
+
+    div {
+        @extend .flex-center-box;        
+        @extend .material-shadow;
+        width: 200px;
+        height: 100px;
+        background: white;
+        padding: 10px;
+    }
+}

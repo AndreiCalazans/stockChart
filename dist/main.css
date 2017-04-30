@@ -48,7 +48,24 @@ html {
   font-size: 14px;
   line-height: 1.5; }
 
-.flex-center-box, .loading {
+.flex-center-box, .loading, .warning, .warning div {
   display: flex;
   justify-content: center;
   align-items: center; }
+
+.material-shadow, .warning div {
+  padding: 10px;
+  box-shadow: 0 0 3px 0px rgba(0, 0, 0, 0.5);
+  margin: 5px; }
+
+.warning {
+  position: fixed;
+  z-index: 1000;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  height: 100%; }
+  .warning div {
+    width: 200px;
+    height: 100px;
+    background: white;
+    padding: 10px; }

@@ -12,7 +12,7 @@ function Stock(props) {
 
     let renderStocks = completeNames.map((each , id) => {
             return (
-                <div key={id}>
+                <div className='material-shadow' key={id}>
                     <div><i onClick={liftUpRemove} title={each.code} className='fa fa-times'></i></div>
                     <p>
                         <b>{each.code}</b>

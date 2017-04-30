@@ -1,6 +1,8 @@
 import React from 'react';
 import 'jquery';
 import Stock from './Stock';
+import WarningMsg from './WarningMsg';
+
 
 var seriesOptions = [],
     seriesCounter = 0,
@@ -8,9 +10,8 @@ var seriesOptions = [],
     completeNames = [],
     test = 'test';
 
-// now you have to create edit function to remove name from list 
-//when clicked by lifting up the name from the child component.
-
+// you need to fix what to do when you make an bad ajax call example ntfx
+// how to handle server timeouts and wrong calls 
    
 
 
@@ -23,7 +24,9 @@ class Main extends React.Component {
         this.state = {
             names: [],
             completeNames: [],
-            isLoading: true
+            isLoading: true,
+            notMessage: false,
+            Message: null
         }
     }
 
@@ -111,8 +114,9 @@ class Main extends React.Component {
     
 
     shouldComponentUpdate(nextProps, nextState) {
-        console.log(this.state.names.length , nextState.names.length);
-        if (this.state.names.length != nextState.names.length) {
+        if(nextState.notMessage) {
+            return true;
+        } else if (this.state.names.length != nextState.names.length) {
             return true
         } else if(this.state.completeNames.length === nextState.completeNames.length) {
             return false
@@ -128,7 +132,7 @@ class Main extends React.Component {
          completeNames = [];    
         $.each(this.state.names , function (i, name) {
 // https://www.quandl.com/api/v3/datasets/WIKI/FB.json?column_index=4&order=asc&collapse=daily&api_key=8TZgcVZUcVLzS2EUsioo
-    $.getJSON('https://www.quandl.com/api/v3/datasets/WIKI/'+name+'.json?column_index=4&order=asc&collapse=daily&api_key=8TZgcVZUcVLzS2EUsioo',    function (data) {
+    $.getJSON('https://www.quandl.com/api/v3/datasets/WIKI/'+name+'.json?column_index=4&order=asc&collapse=daily&api_key=8TZgcVZUcVLzS2EUsioo').done(function (data) {
         
         let receivedData = data.dataset.data;
         let parsedData = data.dataset.data.map((each)=> {
@@ -158,13 +162,25 @@ class Main extends React.Component {
             that.createChart(completeNames);
            
         }
-    });
+    }).fail((jqxhr, textStatus, error)=> {
+        // incase some adds an wrong code delete the code and reload
+        // 429 when you have CORS problem  404 when not found
+
+         if(jqxhr.status == '404'){
+             // then it didnt find the code so delete the code and reload
+             console.log('item not found');
+             that.notFound(name);
+             return 
+         } else {
+             // it had a bad call therefore just reload everything or refresh
+                location.reload();
+         }
+    })
 });
     }
 
     handleRemoveName(stockCode) {
-        console.log(stockCode);
-        // probblem to the way you adding.
+  
         
         if(this.state.names.indexOf(stockCode) >= 0 ) {
             
@@ -186,20 +202,28 @@ class Main extends React.Component {
         } else {
             console.log('not found');
         }
-
-            // this.setState((prevState) => {
-            //     return {
-            //         names: [
-            //             ...prevState.names,
-            //             stockCode
-            //         ]
-            //     }
-            // })
     
     }
 
+    notFound(name) {
+        let newState = []; 
+            this.setState((prevState , props) => {
+                 prevState.names.forEach((each) => {
+                    if(each != name) {
+                        newState.push(each);
+                    }
+                });
+                return {
+                    names: newState,
+                    Message: name + ' not found',
+                    notMessage: true,
+                    isLoading: false
+                }
+            })
+
+    }
+
     render() {
-        console.log(this.state.completeNames);
         var Boxes = this.state.completeNames.map((each, key) => {
                        return (
                            <div key={key}>
@@ -213,6 +237,7 @@ class Main extends React.Component {
 
         return (
             <div>
+                <WarningMsg show={this.state.notMessage} msg={this.state.Message}></WarningMsg>
                 {this.state.isLoading &&
                     <div className="loading">
                         <div className="spinner">
