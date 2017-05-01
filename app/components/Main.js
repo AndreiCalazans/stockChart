@@ -2,20 +2,12 @@ import React from 'react';
 import 'jquery';
 import Stock from './Stock';
 import WarningMsg from './WarningMsg';
+import io from 'socket.io-client';
+var socket = io();
 
-
-// things to do:
-    // put seriesOptions in state then handle the state 
-    // through seriesOptions. including deleting and adding
 
 var seriesOptions = [],
-    seriesCounter = 0,
-    names = ['MSFT', 'AAPL', 'GOOG', 'F'],
-    test = 'test';
-
-// you need to fix what to do when you make an bad ajax call example ntfx
-// how to handle server timeouts and wrong calls 
-   
+    seriesCounter = 0;
 
 
 class Main extends React.Component {
@@ -38,6 +30,7 @@ class Main extends React.Component {
         e.preventDefault();
         let code = this.refs.code.value.toUpperCase();
         this.refs.code.value = '';
+        socket.emit('addStock' , code);
         this.setState((prevState , props) => {
            
             return {
@@ -98,9 +91,27 @@ class Main extends React.Component {
 }
     componentWillMount() {
         // this is where you will connect to the database.
-        this.setState({
-            names: ['MSFT', 'AAPL', 'GOOG', 'F']
+        let that = this;
+        socket.emit('new', 'new user')
+        
+        
+        socket.on('update', function(data) {
+          
+            if(data.length < that.state.names.length) {
+                console.log('inside the if state')
+                that.state.names.forEach((each) => {
+                    if (data.indexOf(each) == -1) {
+                      console.log('yes you ', each);
+                        that.handleRemoveName(each);
+                    }
+                })
+            } else {
+                    that.setState({
+                    names: data
+                })
+            }
         })
+
        
     }
     componentDidMount() {
@@ -111,6 +122,7 @@ class Main extends React.Component {
   
         if(this.state.names.length != prevState.names.length) {
             this.getData();
+            
         }
 
     }
@@ -133,6 +145,8 @@ class Main extends React.Component {
 
     getData() {
         console.log('get data called', this.state.names);
+
+        
          let that = this;
          // empty completeNames incase it was already called before
          
@@ -220,7 +234,7 @@ class Main extends React.Component {
     }
 
     handleRemoveName(stockCode) {
-        
+        socket.emit('removeStock' , stockCode);
         let newSeries = [];
         let newCodeNames = [];
         this.state.series.forEach((e) => {
@@ -239,6 +253,7 @@ class Main extends React.Component {
 
     notFound(name) {
         let newState = []; 
+        socket.emit('removeStock', name);
             this.setState((prevState , props) => {
                  prevState.names.forEach((each) => {
                     if(each != name) {

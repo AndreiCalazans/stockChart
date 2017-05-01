@@ -3,7 +3,17 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var bodyParser= require('body-parser');
 var app = express(); 
+
 var PORT = process.env.PORT || 3000;
+
+var server = app.listen(PORT, function(){
+  console.log('server is up on port ' + PORT);
+});
+
+var io = require('socket.io')(server);
+
+
+
 var mongoose = require('mongoose');
 require('dotenv').config();
 
@@ -23,14 +33,35 @@ app.get('*.js', function (req, res, next) {
   next();
 });
 
+io.on('connection', function(socket) {
+  let codes = ['MSFT', 'AAPL', 'GOOG'  ];
+  console.log('a user connect');
+  
+  
+  io.emit('update', codes);
+  
+
+  socket.on('removeStock', function(stock) {
+    codes.splice(codes.indexOf(stock), 1);
+    console.log('remove', codes);
+  })
+  socket.on('addStock' , function(stock) {
+    codes.push(stock);
+    console.log(codes);
+})
+  socket.on('new', function(msg) {
+    console.log(msg);
+  })
+
+  socket.on('disconnect' , function() {
+    console.log('user disconnected');
+  })
+})
 
 app.get('*', function (req, res) {
   res.sendFile(__dirname + '/dist/index.html');
 });
 
 
-app.listen(PORT, function(){
-  console.log('server is up on port ' + PORT);
-});
 
 
