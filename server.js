@@ -33,8 +33,8 @@ app.get('*.js', function (req, res, next) {
   next();
 });
 
+var codes = ['MSFT', 'AAPL', 'GOOG'  ];
 io.on('connection', function(socket) {
-  let codes = ['MSFT', 'AAPL', 'GOOG'  ];
   console.log('a user connect');
   
   
@@ -44,10 +44,12 @@ io.on('connection', function(socket) {
   socket.on('removeStock', function(stock) {
     codes.splice(codes.indexOf(stock), 1);
     console.log('remove', codes);
+    io.emit('update', codes);
   })
   socket.on('addStock' , function(stock) {
     codes.push(stock);
     console.log(codes);
+    io.emit('update', codes);
 })
   socket.on('new', function(msg) {
     console.log(msg);

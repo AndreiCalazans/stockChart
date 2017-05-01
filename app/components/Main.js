@@ -5,6 +5,8 @@ import WarningMsg from './WarningMsg';
 import io from 'socket.io-client';
 var socket = io();
 
+// hook up database to codes in the server;
+
 
 var seriesOptions = [],
     seriesCounter = 0;
@@ -96,20 +98,18 @@ class Main extends React.Component {
         
         
         socket.on('update', function(data) {
-          
-            if(data.length < that.state.names.length) {
-                console.log('inside the if state')
-                that.state.names.forEach((each) => {
-                    if (data.indexOf(each) == -1) {
-                      console.log('yes you ', each);
-                        that.handleRemoveName(each);
-                    }
-                })
-            } else {
-                    that.setState({
-                    names: data
-                })
+          // this is to update the state when someone else deletes a user
+          // you also have to remove the series
+          let newSeries = []
+          that.state.series.forEach((each)=> {
+            if (data.indexOf(each.code) >= 0) {
+                newSeries.push(each);
             }
+          })
+            that.setState({
+                names:data,
+                series: newSeries
+            })
         })
 
        
@@ -149,7 +149,6 @@ class Main extends React.Component {
         
          let that = this;
          // empty completeNames incase it was already called before
-         
         $.each(this.state.names , function (i, name) {
            var fetchedNames = that.state.series.map((each) => {
                 return each.code;
@@ -166,15 +165,8 @@ class Main extends React.Component {
                     //below you are parsing the year-month-day format to milliseconds
                     return [ new Date(each[0]).getTime() ,each[1]]
                 })
-            
-                
-             
+               
 
-                // seriesOptions[i] = {
-                //     code: name,
-                //     name: data.dataset.name,
-                //     data: parsedData
-                // };
                 that.setState((prevState , props) => {
                     return {
                         series: [
@@ -200,18 +192,17 @@ class Main extends React.Component {
                         
                         }
                
-            })
-            .fail((jqxhr, textStatus, error)=> {
+            }).fail((jqxhr, textStatus, error)=> {
                 // incase some adds an wrong code delete the code and reload
                 // 429 when you have CORS problem  404 when not found
 
                 if(jqxhr.status == '404'){
                     // then it didnt find the code so delete the code and reload
                     console.log('item not found');
-                    that.notFound(name);
+                    that.notFound(name , true);
                     return 
                 } else {
-                    that.notFound('');
+                    that.notFound('Please reload' , false);
                 }
             })
 
@@ -228,13 +219,14 @@ class Main extends React.Component {
         }
 
 
-
         
 });
     }
 
-    handleRemoveName(stockCode) {
-        socket.emit('removeStock' , stockCode);
+    handleRemoveName(stockCode , shouldEmit) {
+        if(shouldEmit) {
+            socket.emit('removeStock' , stockCode);
+        }
         let newSeries = [];
         let newCodeNames = [];
         this.state.series.forEach((e) => {
@@ -251,9 +243,11 @@ class Main extends React.Component {
     
     }
 
-    notFound(name) {
+    notFound(name , shouldDelete) {
+        if (shouldDelete) {
         let newState = []; 
-        socket.emit('removeStock', name);
+        console.log(name);
+  
             this.setState((prevState , props) => {
                  prevState.names.forEach((each) => {
                     if(each != name) {
@@ -267,13 +261,21 @@ class Main extends React.Component {
                     isLoading: false
                 }
             })
+        } else {
+            this.setState ({
+                    Message: 'Please reload, problem while fetching',
+                    notMessage: true,
+                    isLoading: false
+            })
+        }
+
 
     }
 
     handleCloseErrorMsg() {
-        console.log('closing');
         this.setState({
             notMessage: false,
+            Message: null
         })
     }
 

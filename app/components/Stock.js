@@ -6,7 +6,7 @@ function Stock(props) {
     var {completeNames, onRemove} = props;
 
     function liftUpRemove(e) {
-        onRemove(e.target.title);
+        onRemove(e.target.title  , true);
     }
 
 
