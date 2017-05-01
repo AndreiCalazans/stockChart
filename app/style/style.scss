@@ -9,8 +9,13 @@
 html {
     font-size: 14px;
     line-height: 1.5;
+    font-family: sans-serif;
+    letter-spacing: 3px;
+    line-height: 20px;
 }
-
+body {
+    background: #2d2d2e;
+}
 .flex-center-box {
     display:flex;
     justify-content: center;
@@ -18,9 +23,20 @@ html {
 }
 
 .material-shadow {
+    position:relative;
     padding: 10px;
+    border-left: 4px solid orange;
     box-shadow: 0 0 3px 0px rgba(0,0,0,0.5);
     margin: 5px;
+    transition: all 0.2s;
+    div {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+    }
+    &:hover {
+        box-shadow: 0 0 6px 1px rgba(0,0,0,0.5);
+    }
 }
 
 .warning {
@@ -39,4 +55,38 @@ html {
         background: white;
         padding: 10px;
     }
+}
+
+form {
+    padding: 20px;
+    input {
+        margin: 5px;
+    }
+    a {
+        margin: 5px;
+        color: white;
+    }
+}
+
+.header {
+    @extend .flex-center-box;
+
+    * {
+        flex-grow: 1;
+        color: white;
+        
+    }
+    h1 {
+        text-align: left;
+        padding: 20px;
+    }
+    p {
+        text-align: right;
+        padding: 5px;
+    }
+    
+}
+
+.stock-container {
+    margin: 0 10px 20px 10px; 
 }

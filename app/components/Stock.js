@@ -23,7 +23,7 @@ function Stock(props) {
         });
 
     return (
-        <div>
+        <div className='stock-container'>
           {renderStocks}
         </div>
     )

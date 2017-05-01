@@ -46,17 +46,32 @@
 
 html {
   font-size: 14px;
-  line-height: 1.5; }
+  line-height: 1.5;
+  font-family: sans-serif;
+  letter-spacing: 3px;
+  line-height: 20px; }
 
-.flex-center-box, .loading, .warning, .warning div {
+body {
+  background: #2d2d2e; }
+
+.flex-center-box, .loading, .warning, .warning div, .header {
   display: flex;
   justify-content: center;
   align-items: center; }
 
 .material-shadow, .warning div {
+  position: relative;
   padding: 10px;
+  border-left: 4px solid orange;
   box-shadow: 0 0 3px 0px rgba(0, 0, 0, 0.5);
-  margin: 5px; }
+  margin: 5px;
+  transition: all 0.2s; }
+  .material-shadow div, .warning div div {
+    position: absolute;
+    top: 5px;
+    right: 10px; }
+  .material-shadow:hover, .warning div:hover {
+    box-shadow: 0 0 6px 1px rgba(0, 0, 0, 0.5); }
 
 .warning {
   position: fixed;
@@ -69,3 +84,26 @@ html {
     height: 100px;
     background: white;
     padding: 10px; }
+
+form {
+  padding: 20px; }
+  form input {
+    margin: 5px; }
+  form a {
+    margin: 5px;
+    color: white; }
+
+.header * {
+  flex-grow: 1;
+  color: white; }
+
+.header h1 {
+  text-align: left;
+  padding: 20px; }
+
+.header p {
+  text-align: right;
+  padding: 5px; }
+
+.stock-container {
+  margin: 0 10px 20px 10px; }

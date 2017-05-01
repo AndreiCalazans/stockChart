@@ -11,7 +11,7 @@ var socket = io();
 var seriesOptions = [],
     seriesCounter = 0;
 
-
+import './ChartTheme';
 class Main extends React.Component {
     constructor(props) {
         super(props);
@@ -146,7 +146,17 @@ class Main extends React.Component {
     getData() {
         console.log('get data called', this.state.names);
 
-        
+        if(this.state.names.length === 0 ) {
+            console.log('its empty');
+            this.setState({
+                series: [{
+                    name: '',
+                    data: 0
+                }],
+                isLoading: false
+            })
+        }
+            
          let that = this;
          // empty completeNames incase it was already called before
         $.each(this.state.names , function (i, name) {
@@ -184,8 +194,9 @@ class Main extends React.Component {
                 // As we're loading the data asynchronously, we don't know what order it will arrive. So
                 // we keep a counter and create the chart when all the data is loaded.
                 seriesCounter += 1;
-
-                if (seriesCounter === that.state.names.length) {
+                console.log(seriesCounter);
+                console.log(that.state.names.length);
+                if (seriesCounter >= that.state.names.length) {
                             console.log('inside the if seriesCounter', seriesCounter);
                             seriesCounter = 0;
                             that.createChart();
@@ -247,7 +258,7 @@ class Main extends React.Component {
         if (shouldDelete) {
         let newState = []; 
         console.log(name);
-  
+            socket.emit('removeStock' , name);
             this.setState((prevState , props) => {
                  prevState.names.forEach((each) => {
                     if(each != name) {
@@ -303,7 +314,10 @@ class Main extends React.Component {
                         </div>
                     </div>
                 }
-                <h1>Stock Chart</h1>
+                <div className="header">
+                    <h1>Stock Chart</h1>
+                    <p>By <a href="http://andrei-calazans.herokuapp.com/">Andrei Calazans</a></p>
+                </div>
                 <div id="container" style={{height: "400px", minWidth: "310px"}}></div>
                 <div>
                     <form onSubmit={this.handleSubmit} >
@@ -311,6 +325,8 @@ class Main extends React.Component {
                             Follow a Stock, Add a Stock Code: 
                             <input type="text" ref='code' />
                             <button>Add</button>
+
+                            <a href="https://www.google.com.br/search?q=STOCK+CODES&oq=stock+CODES&aqs=chrome.0.69i59l2j0l4.1687j0j7&sourceid=chrome&ie=UTF-8" target='_blank'>List of Stock Codes</a>
                         </label>
                     </form>
                 </div>

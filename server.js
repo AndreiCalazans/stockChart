@@ -42,9 +42,13 @@ io.on('connection', function(socket) {
   
 
   socket.on('removeStock', function(stock) {
-    codes.splice(codes.indexOf(stock), 1);
-    console.log('remove', codes);
-    io.emit('update', codes);
+    // an if statement to impede trying to delete something that doesnt exist
+    if(codes.indexOf(stock) >= 0) {
+      codes.splice(codes.indexOf(stock), 1);
+      console.log('remove', codes);
+      io.emit('update', codes);
+    }
+
   })
   socket.on('addStock' , function(stock) {
     codes.push(stock);
