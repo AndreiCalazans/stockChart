@@ -11,7 +11,6 @@ import WarningMsg from './WarningMsg';
 var seriesOptions = [],
     seriesCounter = 0,
     names = ['MSFT', 'AAPL', 'GOOG', 'F'],
-    completeNames = [],
     test = 'test';
 
 // you need to fix what to do when you make an bad ajax call example ntfx
@@ -28,10 +27,10 @@ class Main extends React.Component {
         this.handleRemoveName = this.handleRemoveName.bind(this);
         this.state = {
             names: [],
-            completeNames: [],
             isLoading: true,
             notMessage: false,
-            Message: null
+            Message: null,
+            series : []
         }
     }
 
@@ -54,8 +53,12 @@ class Main extends React.Component {
 
     }
 
-    createChart(completeNames) {
+    createChart() {
     let that = this;
+    this.setState( {
+        isLoading: false
+    });
+    console.log('is loading should be off', this.state.isLoading);
     Highcharts.stockChart('container', {
 
         rangeSelector: {
@@ -88,13 +91,9 @@ class Main extends React.Component {
             split: true
         },
 
-        series: seriesOptions
+        series: that.state.series
     });
 
-     this.setState({
-            completeNames: completeNames,
-            isLoading:false    
-        })
 
 }
     componentWillMount() {
@@ -109,8 +108,7 @@ class Main extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        // console.log('its was updated', this.state.names);
-        //  this.getData();
+  
         if(this.state.names.length != prevState.names.length) {
             this.getData();
         }
@@ -120,11 +118,13 @@ class Main extends React.Component {
     
 
     shouldComponentUpdate(nextProps, nextState) {
-        if(nextState.notMessage != this.state.notMessage ) {
+        if (nextState.isLoading != this.state.isLoading) {
+            return true
+        } else if(nextState.notMessage != this.state.notMessage ) {
             return true;
         } else if (this.state.names.length != nextState.names.length) {
             return true
-        } else if(this.state.completeNames.length === nextState.completeNames.length) {
+        } else if(this.state.series.length === nextState.series.length) {
             return false
         } else {
             return true
@@ -135,81 +135,105 @@ class Main extends React.Component {
         console.log('get data called', this.state.names);
          let that = this;
          // empty completeNames incase it was already called before
-         completeNames = [];    
+         
         $.each(this.state.names , function (i, name) {
-// https://www.quandl.com/api/v3/datasets/WIKI/FB.json?column_index=4&order=asc&collapse=daily&api_key=8TZgcVZUcVLzS2EUsioo
-    $.getJSON('https://www.quandl.com/api/v3/datasets/WIKI/'+name+'.json?column_index=4&order=asc&collapse=daily&api_key=8TZgcVZUcVLzS2EUsioo').done(function (data) {
+           var fetchedNames = that.state.series.map((each) => {
+                return each.code;
+            })
+
+
+            if (fetchedNames.indexOf(name) == -1  || fetchedNames[0] == undefined){
+                //fetch data
+                console.log('fetching');
+             $.getJSON('https://www.quandl.com/api/v3/datasets/WIKI/'+name+'.json?column_index=4&order=asc&collapse=daily&api_key=8TZgcVZUcVLzS2EUsioo').done(function (data) {
         
-        let receivedData = data.dataset.data;
-        let parsedData = data.dataset.data.map((each)=> {
-            //below you are parsing the year-month-day format to milliseconds
-            return [ new Date(each[0]).getTime() ,each[1]]
-        })
-       
-        
-        completeNames.push({
-            code: name,
-            name: data.dataset.name
-        });
-        
+                let receivedData = data.dataset.data;
+                let parsedData = data.dataset.data.map((each)=> {
+                    //below you are parsing the year-month-day format to milliseconds
+                    return [ new Date(each[0]).getTime() ,each[1]]
+                })
+            
+                
+             
 
-        seriesOptions[i] = {
-            name: data.dataset.name,
-            data: parsedData
-        };
-  
+                // seriesOptions[i] = {
+                //     code: name,
+                //     name: data.dataset.name,
+                //     data: parsedData
+                // };
+                that.setState((prevState , props) => {
+                    return {
+                        series: [
+                            ...prevState.series,
+                            {
+                                code: name,
+                                name: data.dataset.name,
+                                data: parsedData
+                            }
+                        ]
+                    }
+                })
 
 
-        // As we're loading the data asynchronously, we don't know what order it will arrive. So
-        // we keep a counter and create the chart when all the data is loaded.
-        seriesCounter += 1;
+                // As we're loading the data asynchronously, we don't know what order it will arrive. So
+                // we keep a counter and create the chart when all the data is loaded.
+                seriesCounter += 1;
 
-        if (seriesCounter === that.state.names.length) {
-            console.log('inside the if seriesCounter', seriesCounter);
-            seriesCounter = 0;
-            that.createChart(completeNames);
-           
+                if (seriesCounter === that.state.names.length) {
+                            console.log('inside the if seriesCounter', seriesCounter);
+                            seriesCounter = 0;
+                            that.createChart();
+                        
+                        }
+               
+            })
+            .fail((jqxhr, textStatus, error)=> {
+                // incase some adds an wrong code delete the code and reload
+                // 429 when you have CORS problem  404 when not found
+
+                if(jqxhr.status == '404'){
+                    // then it didnt find the code so delete the code and reload
+                    console.log('item not found');
+                    that.notFound(name);
+                    return 
+                } else {
+                    that.notFound('');
+                }
+            })
+
+        } else {
+            // data had already been fetched
+            seriesCounter++;
+
+         if (seriesCounter === that.state.names.length) {
+                    console.log('inside the if seriesCounter', seriesCounter);
+                    seriesCounter = 0;
+                    that.createChart();
+                
+                }
         }
-    })
-    .fail((jqxhr, textStatus, error)=> {
-        // incase some adds an wrong code delete the code and reload
-        // 429 when you have CORS problem  404 when not found
 
-         if(jqxhr.status == '404'){
-             // then it didnt find the code so delete the code and reload
-             console.log('item not found');
-             that.notFound(name);
-             return 
-         } else {
-             that.notFound('');
-         }
-    })
+
+
+        
 });
     }
 
     handleRemoveName(stockCode) {
-  
         
-        if(this.state.names.indexOf(stockCode) >= 0 ) {
-            
-
-            let newState = []; 
-               
-
-            this.setState((prevState , props) => {
-                 prevState.names.forEach((each) => {
-                    if(each != stockCode) {
-                        newState.push(each);
-                    }
-                });
-                return {
-                    names: newState,
-                    isLoading: true
-                }
-            })
-        } else {
-            console.log('not found');
-        }
+        let newSeries = [];
+        let newCodeNames = [];
+        this.state.series.forEach((e) => {
+            if (e.code != stockCode) {
+                newSeries.push(e);
+                newCodeNames.push(e.code);
+            }
+        })
+        console.log(newSeries);
+        this.setState({
+            series: newSeries,
+            names: newCodeNames
+        })
     
     }
 
@@ -239,7 +263,7 @@ class Main extends React.Component {
     }
 
     render() {
-        var Boxes = this.state.completeNames.map((each, key) => {
+        var Boxes = this.state.series.map((each, key) => {
                        return (
                            <div key={key}>
                                <p>
@@ -273,7 +297,7 @@ class Main extends React.Component {
                         </label>
                     </form>
                 </div>
-               <Stock onRemove={this.handleRemoveName} completeNames={this.state.completeNames}></Stock>
+               <Stock onRemove={this.handleRemoveName} completeNames={this.state.series}></Stock>
             </div>
         )
     }
