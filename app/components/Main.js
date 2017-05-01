@@ -32,17 +32,27 @@ class Main extends React.Component {
         e.preventDefault();
         let code = this.refs.code.value.toUpperCase();
         this.refs.code.value = '';
-        socket.emit('addStock' , code);
-        this.setState((prevState , props) => {
-           
-            return {
-                names: [
-                    ...prevState.names,
-                    code
-                ],
-                isLoading:true
-            }
-        })
+        if (this.state.names.indexOf(code) >= 0) {
+            // warn user that this name already exists
+            this.setState({
+                Message: code + ' is already in chart',
+                notMessage: true,
+                isLoading: false
+            })
+            
+        } else {
+            socket.emit('addStock' , code);
+            this.setState((prevState , props) => {
+            
+                return {
+                    names: [
+                        ...prevState.names,
+                        code
+                    ],
+                    isLoading:true
+                }
+            })
+        }
         
        
 
@@ -53,7 +63,7 @@ class Main extends React.Component {
     this.setState( {
         isLoading: false
     });
-    console.log('is loading should be off', this.state.isLoading);
+    
     Highcharts.stockChart('container', {
 
         rangeSelector: {
@@ -144,10 +154,9 @@ class Main extends React.Component {
     }
 
     getData() {
-        console.log('get data called', this.state.names);
 
         if(this.state.names.length === 0 ) {
-            console.log('its empty');
+            
             this.setState({
                 series: [{
                     name: '',
@@ -167,7 +176,7 @@ class Main extends React.Component {
 
             if (fetchedNames.indexOf(name) == -1  || fetchedNames[0] == undefined){
                 //fetch data
-                console.log('fetching');
+                
              $.getJSON('https://www.quandl.com/api/v3/datasets/WIKI/'+name+'.json?column_index=4&order=asc&collapse=daily&api_key=8TZgcVZUcVLzS2EUsioo').done(function (data) {
         
                 let receivedData = data.dataset.data;
@@ -194,10 +203,9 @@ class Main extends React.Component {
                 // As we're loading the data asynchronously, we don't know what order it will arrive. So
                 // we keep a counter and create the chart when all the data is loaded.
                 seriesCounter += 1;
-                console.log(seriesCounter);
-                console.log(that.state.names.length);
+                
                 if (seriesCounter >= that.state.names.length) {
-                            console.log('inside the if seriesCounter', seriesCounter);
+                            
                             seriesCounter = 0;
                             that.createChart();
                         
@@ -209,7 +217,7 @@ class Main extends React.Component {
 
                 if(jqxhr.status == '404'){
                     // then it didnt find the code so delete the code and reload
-                    console.log('item not found');
+                    
                     that.notFound(name , true);
                     return 
                 } else {
@@ -222,7 +230,7 @@ class Main extends React.Component {
             seriesCounter++;
 
          if (seriesCounter === that.state.names.length) {
-                    console.log('inside the if seriesCounter', seriesCounter);
+                    
                     seriesCounter = 0;
                     that.createChart();
                 
@@ -246,7 +254,7 @@ class Main extends React.Component {
                 newCodeNames.push(e.code);
             }
         })
-        console.log(newSeries);
+        
         this.setState({
             series: newSeries,
             names: newCodeNames
@@ -257,7 +265,7 @@ class Main extends React.Component {
     notFound(name , shouldDelete) {
         if (shouldDelete) {
         let newState = []; 
-        console.log(name);
+        
             socket.emit('removeStock' , name);
             this.setState((prevState , props) => {
                  prevState.names.forEach((each) => {
