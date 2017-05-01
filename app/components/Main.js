@@ -4,6 +4,10 @@ import Stock from './Stock';
 import WarningMsg from './WarningMsg';
 
 
+// things to do:
+    // put seriesOptions in state then handle the state 
+    // through seriesOptions. including deleting and adding
+
 var seriesOptions = [],
     seriesCounter = 0,
     names = ['MSFT', 'AAPL', 'GOOG', 'F'],
@@ -20,6 +24,7 @@ class Main extends React.Component {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.createChart = this.createChart.bind(this);
+        this.handleCloseErrorMsg = this.handleCloseErrorMsg.bind(this);
         this.handleRemoveName = this.handleRemoveName.bind(this);
         this.state = {
             names: [],
@@ -33,6 +38,7 @@ class Main extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
         let code = this.refs.code.value.toUpperCase();
+        this.refs.code.value = '';
         this.setState((prevState , props) => {
            
             return {
@@ -49,7 +55,7 @@ class Main extends React.Component {
     }
 
     createChart(completeNames) {
-    
+    let that = this;
     Highcharts.stockChart('container', {
 
         rangeSelector: {
@@ -114,7 +120,7 @@ class Main extends React.Component {
     
 
     shouldComponentUpdate(nextProps, nextState) {
-        if(nextState.notMessage) {
+        if(nextState.notMessage != this.state.notMessage ) {
             return true;
         } else if (this.state.names.length != nextState.names.length) {
             return true
@@ -145,12 +151,14 @@ class Main extends React.Component {
             code: name,
             name: data.dataset.name
         });
-
+        
 
         seriesOptions[i] = {
             name: data.dataset.name,
             data: parsedData
         };
+  
+
 
         // As we're loading the data asynchronously, we don't know what order it will arrive. So
         // we keep a counter and create the chart when all the data is loaded.
@@ -162,7 +170,8 @@ class Main extends React.Component {
             that.createChart(completeNames);
            
         }
-    }).fail((jqxhr, textStatus, error)=> {
+    })
+    .fail((jqxhr, textStatus, error)=> {
         // incase some adds an wrong code delete the code and reload
         // 429 when you have CORS problem  404 when not found
 
@@ -172,8 +181,7 @@ class Main extends React.Component {
              that.notFound(name);
              return 
          } else {
-             // it had a bad call therefore just reload everything or refresh
-                location.reload();
+             that.notFound('');
          }
     })
 });
@@ -223,6 +231,13 @@ class Main extends React.Component {
 
     }
 
+    handleCloseErrorMsg() {
+        console.log('closing');
+        this.setState({
+            notMessage: false,
+        })
+    }
+
     render() {
         var Boxes = this.state.completeNames.map((each, key) => {
                        return (
@@ -237,7 +252,7 @@ class Main extends React.Component {
 
         return (
             <div>
-                <WarningMsg show={this.state.notMessage} msg={this.state.Message}></WarningMsg>
+                <WarningMsg onClick={this.handleCloseErrorMsg} show={this.state.notMessage} msg={this.state.Message}></WarningMsg>
                 {this.state.isLoading &&
                     <div className="loading">
                         <div className="spinner">
